@@ -44,8 +44,8 @@ jobs:
           find android -type f \( -name "build.gradle" -o -name "settings.gradle" \) -exec sed -i 's|mavenCentral()|maven { url "https://maven-central.storage-download.googleapis.com/maven2/" }\n        mavenCentral()|g' {} + 2>/dev/null || true
           find android -type f \( -name "build.gradle.kts" -o -name "settings.gradle.kts" \) -exec sed -i 's|mavenCentral()|maven("https://maven-central.storage-download.googleapis.com/maven2/")\n        mavenCentral()|g' {} + 2>/dev/null || true
 
-          # Update printing to modern 5.13.2 with Android 34 support
-          sed -i 's/printing: 5.12.0/printing: ^5.13.2/g' pubspec.yaml
+          # Pin printing to 5.13.1 for clean web/share_plus dependency resolution
+          sed -i 's/printing: .*/printing: 5.13.1/g' pubspec.yaml
 
           # Disable verifyReleaseResources to prevent AAPT lStar error
           if [ -f android/build.gradle ]; then
