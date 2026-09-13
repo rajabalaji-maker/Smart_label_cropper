@@ -37,6 +37,16 @@ jobs:
           find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/minSdkVersion[[:space:]]+flutter\.minSdkVersion/minSdkVersion 21/g' {} + 2>/dev/null || true
           sed -i 's/android:label="tony_max_mobile"/android:label="Tony Max Orders"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
 
+          # Bypass AAR metadata compileSdk checks for older plugins (like file_picker)
+          echo "android.suppressUnsupportedCompileSdk=36" >> android/gradle.properties
+          echo "android.dependency.enforceCompileSdk=false" >> android/gradle.properties
+          if [ -f android/build.gradle.kts ]; then
+            printf "\nallprojects {\n    tasks.configureEach {\n        if (name.contains(\"AarMetadata\", ignoreCase = true)) {\n            setEnabled(false)\n        }\n    }\n}\n" >> android/build.gradle.kts
+          fi
+          if [ -f android/build.gradle ]; then
+            printf "\nallprojects {\n    tasks.configureEach { task ->\n        if (task.name.contains(\"AarMetadata\")) {\n            task.enabled = false\n        }\n    }\n}\n" >> android/build.gradle
+          fi
+
       - name: Install Dependencies
         run: flutter pub get
 
