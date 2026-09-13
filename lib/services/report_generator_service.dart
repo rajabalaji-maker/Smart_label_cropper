@@ -11,7 +11,7 @@ class ReportGeneratorService {
   /// Generate printable Pick List PDF
   static Future<Uint8List> generatePickListPdf({
     required List<OrderItem> items,
-    String brandName = "Tony Max",
+    String brandName = "Drenx",
   }) async {
     final pdf = pw.Document();
 
@@ -128,7 +128,7 @@ class ReportGeneratorService {
   /// Generate printable Courier Manifest PDF
   static Future<Uint8List> generateManifestPdf({
     required List<OrderItem> items,
-    String brandName = "Tony Max",
+    String brandName = "Drenx",
   }) async {
     final pdf = pw.Document();
 
@@ -248,7 +248,7 @@ class ReportGeneratorService {
   /// Generate Aggregated Order Summary PDF matching app.py
   static Future<Uint8List> generateOrderSummaryPdf({
     required List<OrderItem> items,
-    String brandName = "Tony Max",
+    String brandName = "Drenx",
   }) async {
     final pdf = pw.Document();
 
@@ -384,7 +384,7 @@ class ReportGeneratorService {
   /// Generate Production Cutting & Stitching Plan PDF matching desktop app
   static Future<Uint8List> generateCuttingPlanPdf({
     required List<Map<String, dynamic>> rows,
-    String brand = "Tony Max",
+    String brand = "Drenx",
     required int totalOrdered,
     required int totalShortage,
   }) async {

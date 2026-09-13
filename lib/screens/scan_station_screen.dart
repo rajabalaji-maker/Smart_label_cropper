@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/inventory_item.dart';
 import '../providers/inventory_provider.dart';
@@ -67,6 +68,7 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
     }
 
     if (item == null) {
+      HapticFeedback.heavyImpact();
       setState(() {
         _isSuccess = false;
         _statusMessage = 'No matching SKU or Order found for: "$q"';
@@ -80,6 +82,7 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
 
     // Process according to mode
     if (_currentMode == ScanMode.lookup) {
+      HapticFeedback.lightImpact();
       setState(() {
         _isSuccess = true;
         _statusMessage = 'Found: ${validItem.sku} (${validItem.size}) • ${validItem.quantity} in stock';
@@ -93,6 +96,7 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
         });
       });
     } else if (_currentMode == ScanMode.dispatch) {
+      HapticFeedback.mediumImpact();
       final newQty = validItem.quantity > 0 ? validItem.quantity - 1 : 0;
       if (validItem.id != null) {
         inventory.updateStock(validItem.id!, newQty, 'Scan Dispatch: $q');
@@ -110,6 +114,7 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
         });
       });
     } else if (_currentMode == ScanMode.restock) {
+      HapticFeedback.mediumImpact();
       final newQty = validItem.quantity + 1;
       if (validItem.id != null) {
         inventory.updateStock(validItem.id!, newQty, 'Scan Restock: $q');

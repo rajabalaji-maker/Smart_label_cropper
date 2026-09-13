@@ -4,7 +4,7 @@ import '../services/database_helper.dart';
 class SettingsProvider with ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
-  String _brandName = "Tony Max";
+  String _brandName = "Drenx";
   String _primaryKeyword = "Original For Recipient";
   String _secondaryKeyword = "Exchange";
   double _secondaryCropPercent = 0.80;
@@ -17,7 +17,7 @@ class SettingsProvider with ChangeNotifier {
   int get defaultLowStockThreshold => _defaultLowStockThreshold;
 
   Future<void> loadSettings() async {
-    _brandName = await _db.getSetting('brand_name', defaultValue: 'Tony Max');
+    _brandName = await _db.getSetting('brand_name', defaultValue: 'Drenx');
     _primaryKeyword = await _db.getSetting('primary_keyword', defaultValue: 'Original For Recipient');
     _secondaryKeyword = await _db.getSetting('secondary_keyword', defaultValue: 'Exchange');
     final cropStr = await _db.getSetting('secondary_crop_percent', defaultValue: '0.80');

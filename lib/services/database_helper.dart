@@ -15,7 +15,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('tony_max_inventory.db');
+    _database = await _initDB('drenx_inventory.db');
     return _database!;
   }
 
@@ -25,8 +25,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Add missing tables and columns safely
+          await db.execute('CREATE TABLE IF NOT EXISTS sku_master_colors (sku TEXT NOT NULL, color TEXT NOT NULL, PRIMARY KEY(sku, color))');
+          await db.execute('CREATE TABLE IF NOT EXISTS sku_master_sizes (sku TEXT NOT NULL, size TEXT NOT NULL, PRIMARY KEY(sku, size))');
+          await db.execute('CREATE TABLE IF NOT EXISTS normalization_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_type TEXT NOT NULL, pattern TEXT NOT NULL, sku TEXT NOT NULL, color TEXT NOT NULL, size TEXT NOT NULL, created_at TEXT NOT NULL)');
+        }
+      },
     );
   }
 
@@ -48,10 +56,12 @@ class DatabaseHelper {
       CREATE TABLE imports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         platform TEXT NOT NULL,
-        file_path TEXT NOT NULL,
+        file_path TEXT,
         imported_at TEXT NOT NULL,
-        total_items INTEGER NOT NULL,
+        total_items INTEGER NOT NULL DEFAULT 0,
         sorted_label_pdf TEXT,
+        without_xpress_pdf TEXT,
+        xpress_bees_pdf TEXT,
         pick_list_pdf TEXT,
         summary_pdf TEXT,
         courier_manifest_pdf TEXT,
@@ -65,12 +75,16 @@ class DatabaseHelper {
         import_id INTEGER NOT NULL,
         platform TEXT NOT NULL,
         order_no TEXT NOT NULL,
-        raw_sku TEXT NOT NULL,
+        raw_sku TEXT,
         sku TEXT NOT NULL,
         color TEXT NOT NULL,
         size TEXT NOT NULL,
-        qty INTEGER NOT NULL,
+        qty INTEGER NOT NULL DEFAULT 1,
         courier_partner TEXT NOT NULL DEFAULT 'Others',
+        awb_no TEXT,
+        pincode TEXT,
+        state TEXT,
+        price REAL DEFAULT 0.0,
         imported_at TEXT NOT NULL,
         FOREIGN KEY(import_id) REFERENCES imports(id) ON DELETE CASCADE
       )
@@ -92,11 +106,41 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE sku_master (
-        sku TEXT PRIMARY KEY,
-        low_stock_threshold INTEGER NOT NULL DEFAULT 5,
-        active INTEGER NOT NULL DEFAULT 1,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sku TEXT UNIQUE NOT NULL,
         bin_location TEXT DEFAULT 'UNMAPPED',
+        low_stock_threshold INTEGER DEFAULT 5,
+        active INTEGER DEFAULT 1,
+        notes TEXT,
         updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE sku_master_colors (
+        sku TEXT NOT NULL,
+        color TEXT NOT NULL,
+        PRIMARY KEY(sku, color)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE sku_master_sizes (
+        sku TEXT NOT NULL,
+        size TEXT NOT NULL,
+        PRIMARY KEY(sku, size)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE normalization_rules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rule_type TEXT NOT NULL,
+        pattern TEXT NOT NULL,
+        sku TEXT NOT NULL,
+        color TEXT NOT NULL,
+        size TEXT NOT NULL,
+        created_at TEXT NOT NULL
       )
     ''');
 
@@ -131,7 +175,7 @@ class DatabaseHelper {
     }
 
     // Default system settings
-    await db.insert('system_settings', {'key': 'brand_name', 'value': 'Tony Max'});
+    await db.insert('system_settings', {'key': 'brand_name', 'value': 'Drenx'});
     await db.insert('system_settings', {'key': 'primary_keyword', 'value': 'Original For Recipient'});
     await db.insert('system_settings', {'key': 'secondary_keyword', 'value': 'Exchange'});
     await db.insert('system_settings', {'key': 'secondary_crop_percent', 'value': '0.80'});

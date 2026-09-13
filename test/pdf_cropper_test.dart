@@ -36,6 +36,7 @@ void main() {
 
     print('Cropped PDF bytes: ' + result.sortedCroppedPdfBytes.length.toString());
     print('Parsed items count: ' + result.parsedItems.length.toString());
+    await File('D:/debug_cropped_output.pdf').writeAsBytes(result.sortedCroppedPdfBytes);
     expect(result.sortedCroppedPdfBytes.isNotEmpty, isTrue);
   });
 }

@@ -318,13 +318,13 @@ class PdfCropperService {
       section.pageSettings.margins.all = 0;
       section.pageSettings.orientation = PdfPageOrientation.landscape;
       section.pageSettings.size = Size(595.0, cropHeight);
-      section.pageSettings.rotate = PdfPageRotateAngle.rotateAngle90;
+      section.pageSettings.rotate = PdfPageRotateAngle.rotateAngle0;
       page = section.pages.add();
     } else {
       doc.pageSettings.margins.all = 0;
       doc.pageSettings.orientation = PdfPageOrientation.landscape;
       doc.pageSettings.size = Size(595.0, cropHeight);
-      doc.pageSettings.rotate = PdfPageRotateAngle.rotateAngle90;
+      doc.pageSettings.rotate = PdfPageRotateAngle.rotateAngle0;
       page = doc.pages.add();
     }
 
