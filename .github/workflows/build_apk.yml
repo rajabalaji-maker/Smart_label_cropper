@@ -33,9 +33,11 @@ jobs:
           mv temp_proj/android .
           rm -rf temp_proj
           mkdir -p assets
-          # Set minSdk to 21
+          # Set minSdk to 21 and compileSdk to 35
           echo "flutter.minSdkVersion=21" >> android/local.properties
+          echo "flutter.compileSdkVersion=35" >> android/local.properties
           find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/minSdk(Version)?[[:space:]=]+flutter\.minSdkVersion/minSdkVersion 21/g' {} + 2>/dev/null || true
+          find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/compileSdk(Version)?[[:space:]=]+flutter\.compileSdkVersion/compileSdkVersion 35/g' {} + 2>/dev/null || true
           sed -i 's/android:label="tony_max_mobile"/android:label="Tony Max Orders"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
 
           # Add Google Maven mirror to prevent 403 Forbidden rate limits
