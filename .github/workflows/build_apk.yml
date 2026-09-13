@@ -1,44 +1,32 @@
-name: Build Android APK
+name: tony_max_mobile
+description: "Tony Max - Offline Mobile Order Sorter, Meesho Label Cropper & Inventory Management App"
+publish_to: 'none'
+version: 1.0.0+1
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+environment:
+  sdk: '>=3.0.0 <4.0.0'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  syncfusion_flutter_pdf: ^26.1.42
+  pdf: ^3.10.8
+  printing: ^5.13.2
+  file_picker: ^8.0.0
+  share_plus: ^9.0.0
+  intl: ^0.19.0
+  csv: ^6.0.0
+  google_fonts: ^6.2.1
+  cupertino_icons: ^1.0.8
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.x'
-          channel: 'stable'
-
-      - name: Configure Android Project
-        run: |
-          flutter create temp_proj --project-name=tony_max_mobile --platforms=android --org=com.tonymax
-          cp -rn temp_proj/android .
-          rm -rf temp_proj
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TonyMax-Release-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+flutter:
+  uses-material-design: true
