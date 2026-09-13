@@ -374,20 +374,20 @@ class _HubCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: color.shade50,
+          color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.shade200),
+          border: Border.all(color: color.withOpacity(0.25)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color.shade700, size: 28),
+            Icon(icon, color: color, size: 28),
             const SizedBox(height: 6),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: color.shade900,
+                color: color,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
