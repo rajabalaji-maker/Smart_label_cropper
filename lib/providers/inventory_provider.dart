@@ -36,6 +36,24 @@ class InventoryProvider with ChangeNotifier {
     }).toList();
   }
 
+  InventoryItem? findItem(String sku, String size, {String? color}) {
+    final normSku = sku.trim().toLowerCase();
+    final normSize = size.trim().toLowerCase();
+    for (final item in _items) {
+      if (item.sku.trim().toLowerCase() == normSku && item.size.trim().toLowerCase() == normSize) {
+        if (color == null || color.isEmpty || item.color.trim().toLowerCase() == color.trim().toLowerCase()) {
+          return item;
+        }
+      }
+    }
+    for (final item in _items) {
+      if (item.sku.trim().toLowerCase() == normSku && item.size.trim().toLowerCase() == normSize) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   Future<void> loadInventory() async {
     _isLoading = true;
     notifyListeners();

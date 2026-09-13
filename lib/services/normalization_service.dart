@@ -99,6 +99,35 @@ class NormalizationService {
     120: "120cm / 6XL",
   };
 
+  static final Map<String, String> kidsBloomerSizeMap = {
+    "6-12 Months": "45",
+    "12-18 Months": "50",
+    "1-2 Years": "55",
+    "2-3 Years": "60",
+    "3-4 Years": "60",
+    "4-5 Years": "65",
+    "5-6 Years": "65",
+    "6-7 Years": "70",
+    "7-8 Years": "70",
+    "8-9 Years": "75",
+    "9-10 Years": "75",
+    "10-11 Years": "80",
+    "11-12 Years": "80",
+    "12-13 Years": "85",
+    "13-14 Years": "85",
+    "14-15 Years": "90",
+    "15-16 Years": "90",
+    "16-17 Years": "95",
+    "17-18 Years": "95",
+  };
+
+  static final List<String> pickupPartners = [
+    "Valmo-EJH", "Valmo-ENL", "Valmo-EJZ", "Valmo",
+    "SHADOWFAX", "DELHIVERY", "Ecom Express", "Bluedart",
+    "Jusda", "Load Share", "FedEx", "Wow", "ElasticRun", "DTDC",
+    "XPRESS BEES", "Unknown",
+  ];
+
   static final Set<String> forceMulticolorSkus = {
     "PLAIN BLOOMER",
     "PRINTED BLOOMER",
@@ -212,6 +241,12 @@ class NormalizationService {
   /// Sort rank for Size
   static int sizeSortRank(String size) {
     final idx = sizeSequence.indexWhere((s) => s.toLowerCase() == size.toLowerCase());
+    return idx >= 0 ? idx : 999;
+  }
+
+  /// Sort rank for Courier Partner
+  static int partnerSortRank(String partner) {
+    final idx = pickupPartners.indexWhere((p) => p.toLowerCase() == partner.toLowerCase());
     return idx >= 0 ? idx : 999;
   }
 }

@@ -4,6 +4,7 @@ import '../models/inventory_item.dart';
 import '../providers/inventory_provider.dart';
 import '../services/normalization_service.dart';
 import '../widgets/stock_counter_dialog.dart';
+import 'scan_station_screen.dart';
 
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({super.key});
@@ -16,6 +17,15 @@ class InventoryScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Inventory Management"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: "Scan Station",
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ScanStationScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => inventory.loadInventory(),

@@ -244,6 +244,142 @@ class ReportGeneratorService {
     return pdf.save();
   }
 
+  /// Generate Aggregated Order Summary PDF matching app.py
+  static Future<Uint8List> generateOrderSummaryPdf({
+    required List<OrderItem> items,
+    String brandName = "Tony Max",
+  }) async {
+    final pdf = pw.Document();
+
+    final Map<String, Map<String, int>> skuSizeTotals = {};
+    final Map<String, int> skuOnlyTotals = {};
+    int grandTotal = 0;
+
+    for (final item in items) {
+      skuSizeTotals.putIfAbsent(item.sku, () => {});
+      skuSizeTotals[item.sku]![item.size] = (skuSizeTotals[item.sku]![item.size] ?? 0) + item.qty;
+      skuOnlyTotals[item.sku] = (skuOnlyTotals[item.sku] ?? 0) + item.qty;
+      grandTotal += item.qty;
+    }
+
+    final dateStr = DateFormat('dd MMM yyyy').format(DateTime.now());
+
+    // Sort SKUs by canonical rank
+    final sortedSkus = skuSizeTotals.keys.toList()
+      ..sort((a, b) => NormalizationService.skuSortRank(a).compareTo(NormalizationService.skuSortRank(b)));
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    "$brandName — Aggregated Order Summary",
+                    style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text(
+                    "Date: $dateStr",
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
+                ],
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.indigo100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text(
+                  "Grand Total: $grandTotal pcs",
+                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo900),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          // Detailed Table: SKU | SIZE | TOTAL ORDERS
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey400),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(4.5), // SKU
+              1: const pw.FlexColumnWidth(3.0), // Size
+              2: const pw.FlexColumnWidth(2.0), // Total Orders
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                children: [
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("SKU", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("SIZE", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("TOTAL ORDERS", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                ],
+              ),
+              for (final sku in sortedSkus)
+                ...(() {
+                  final sizes = skuSizeTotals[sku]!.keys.toList()
+                    ..sort((a, b) => NormalizationService.sizeSortRank(a).compareTo(NormalizationService.sizeSortRank(b)));
+                  return sizes.map((size) {
+                    final qty = skuSizeTotals[sku]![size]!;
+                    return pw.TableRow(
+                      children: [
+                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(sku, style: const pw.TextStyle(fontSize: 10))),
+                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(size, style: const pw.TextStyle(fontSize: 10))),
+                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("$qty", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold))),
+                      ],
+                    );
+                  });
+                })(),
+              // Grand Total Row
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                children: [
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("GRAND TOTAL", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("")),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("$grandTotal", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold))),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 24),
+          // SKU-wise Summary Table (All Sizes Combined)
+          pw.Text("SKU-WISE SUMMARY (All Sizes Combined)", style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey400),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(6.0),
+              1: const pw.FlexColumnWidth(2.5),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                children: [
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("SKU NAME", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("TOTAL QTY", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                ],
+              ),
+              for (final sku in sortedSkus)
+                pw.TableRow(
+                  children: [
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(sku, style: const pw.TextStyle(fontSize: 10))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("${skuOnlyTotals[sku] ?? 0}", textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold))),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
   /// Save PDF bytes to file
   static Future<String> saveReportToFile(Uint8List pdfBytes, String prefix) async {
     final dir = await getApplicationDocumentsDirectory();

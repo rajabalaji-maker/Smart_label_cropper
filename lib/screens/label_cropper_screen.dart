@@ -7,6 +7,8 @@ import '../providers/label_batch_provider.dart';
 import '../widgets/order_item_card.dart';
 import 'pick_list_screen.dart';
 import 'manifest_screen.dart';
+import 'print_center_screen.dart';
+import 'order_form_screen.dart';
 
 class LabelCropperScreen extends StatefulWidget {
   const LabelCropperScreen({super.key});
@@ -42,7 +44,25 @@ class _LabelCropperScreenState extends State<LabelCropperScreen> {
       appBar: AppBar(
         title: const Text("PDF Label Cropper & Sorter"),
         actions: [
-          if (batch.activeOrderItems.isNotEmpty)
+          if (batch.activeOrderItems.isNotEmpty) ...[
+            IconButton(
+              icon: const Icon(Icons.print),
+              tooltip: "Print & Export Hub",
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PrintCenterScreen()),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.content_cut),
+              tooltip: "Cutting Plan",
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const OrderFormScreen()),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.delete_sweep),
               tooltip: "Clear Batch",
@@ -51,6 +71,7 @@ class _LabelCropperScreenState extends State<LabelCropperScreen> {
                 batch.clearActiveBatch();
               },
             ),
+          ],
         ],
       ),
       body: Column(
@@ -184,9 +205,22 @@ class _LabelCropperScreenState extends State<LabelCropperScreen> {
                           backgroundColor: Colors.indigo.shade700,
                           foregroundColor: Colors.white,
                         ),
-                        onPressed: () => batch.shareCroppedPdf(),
-                        icon: const Icon(Icons.share, size: 16),
-                        label: const Text("Share / Print Labels"),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const PrintCenterScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.print, size: 16),
+                        label: const Text("Print / Export Hub"),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const OrderFormScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.content_cut, size: 16),
+                        label: const Text("Cutting Plan"),
                       ),
                       OutlinedButton.icon(
                         onPressed: () {

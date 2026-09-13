@@ -11,6 +11,8 @@ class OrderItem {
   final String courierPartner;
   final String importedAt;
   final int pageIndex; // Index in original or cropped PDF
+  final bool multiOrder;
+  final bool isKidsConversion;
 
   OrderItem({
     this.id,
@@ -25,6 +27,8 @@ class OrderItem {
     this.courierPartner = 'Others',
     required this.importedAt,
     this.pageIndex = 0,
+    this.multiOrder = false,
+    this.isKidsConversion = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -57,6 +61,8 @@ class OrderItem {
       courierPartner: (map['courier_partner'] ?? 'Others') as String,
       importedAt: (map['imported_at'] ?? '') as String,
       pageIndex: 0,
+      multiOrder: (map['multi_order'] == 1 || map['multi_order'] == true),
+      isKidsConversion: (map['is_kids_conversion'] == 1 || map['is_kids_conversion'] == true),
     );
   }
 
@@ -73,6 +79,8 @@ class OrderItem {
     String? courierPartner,
     String? importedAt,
     int? pageIndex,
+    bool? multiOrder,
+    bool? isKidsConversion,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -87,6 +95,8 @@ class OrderItem {
       courierPartner: courierPartner ?? this.courierPartner,
       importedAt: importedAt ?? this.importedAt,
       pageIndex: pageIndex ?? this.pageIndex,
+      multiOrder: multiOrder ?? this.multiOrder,
+      isKidsConversion: isKidsConversion ?? this.isKidsConversion,
     );
   }
 }

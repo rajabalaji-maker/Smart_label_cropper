@@ -53,6 +53,13 @@ void main() {
       expect(LabelParserService.extractCourier("SHADOWFAX LOGISTICS PVT LTD"), 'Shadowfax');
       expect(LabelParserService.extractCourier("EKART LOGISTICS"), 'Ekart');
       expect(LabelParserService.extractCourier("XPRESSBEES LOGISTICS"), 'Xpressbees');
+      expect(LabelParserService.extractCourier("Valmo Pickup 05/09 ENL-R0"), 'Valmo-ENL');
+    });
+
+    test('Kids Bloomer age size mapping', () {
+      expect(NormalizationService.kidsBloomerSizeMap['5-6 Years'], '55cm');
+      expect(NormalizationService.kidsBloomerSizeMap['7-8 Years'], '60cm');
+      expect(NormalizationService.kidsBloomerSizeMap['11-12 Years'], '70cm');
     });
   });
 }

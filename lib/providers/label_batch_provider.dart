@@ -14,8 +14,12 @@ class LabelBatchProvider with ChangeNotifier {
   List<OrderItem> _activeOrderItems = [];
   Uint8List? _activeCroppedPdfBytes;
   String? _activeCroppedPdfPath;
+  String? _activeWithoutXpressPdfPath;
+  String? _activeXpressPdfPath;
+  String? _activeSummaryPdfPath;
   String? _activePickListPdfPath;
   String? _activeManifestPdfPath;
+  Map<String, String> _activePerSkuPdfPaths = {};
   bool _isProcessing = false;
   double _processingProgress = 0.0;
   String _statusMessage = 'Ready';
@@ -24,8 +28,12 @@ class LabelBatchProvider with ChangeNotifier {
   List<OrderItem> get activeOrderItems => _activeOrderItems;
   Uint8List? get activeCroppedPdfBytes => _activeCroppedPdfBytes;
   String? get activeCroppedPdfPath => _activeCroppedPdfPath;
+  String? get activeWithoutXpressPdfPath => _activeWithoutXpressPdfPath;
+  String? get activeXpressPdfPath => _activeXpressPdfPath;
+  String? get activeSummaryPdfPath => _activeSummaryPdfPath;
   String? get activePickListPdfPath => _activePickListPdfPath;
   String? get activeManifestPdfPath => _activeManifestPdfPath;
+  Map<String, String> get activePerSkuPdfPaths => _activePerSkuPdfPaths;
   bool get isProcessing => _isProcessing;
   double get processingProgress => _processingProgress;
   String get statusMessage => _statusMessage;
@@ -75,8 +83,44 @@ class LabelBatchProvider with ChangeNotifier {
       final pickBytes = await ReportGeneratorService.generatePickListPdf(items: _activeOrderItems);
       _activePickListPdfPath = await ReportGeneratorService.saveReportToFile(pickBytes, "pick_list");
 
-      final manifestBytes = await ReportGeneratorService.generateManifestPdf(items: _activeOrderItems);
-      _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(manifestBytes, "manifest");
+      if (result.manifestPdfBytes != null) {
+        _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(result.manifestPdfBytes!, "manifest");
+      } else {
+        final manifestBytes = await ReportGeneratorService.generateManifestPdf(items: _activeOrderItems);
+        _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(manifestBytes, "manifest");
+      }
+
+      if (result.summaryPdfBytes != null) {
+        _activeSummaryPdfPath = await ReportGeneratorService.saveReportToFile(
+          result.summaryPdfBytes!,
+          "order_summary",
+        );
+      }
+
+      if (result.withoutXpressBeesBytes != null) {
+        _activeWithoutXpressPdfPath = await ReportGeneratorService.saveReportToFile(
+          result.withoutXpressBeesBytes!,
+          "without_xpressbees",
+        );
+      } else {
+        _activeWithoutXpressPdfPath = null;
+      }
+
+      if (result.xpressBeesBytes != null) {
+        _activeXpressPdfPath = await ReportGeneratorService.saveReportToFile(
+          result.xpressBeesBytes!,
+          "xpressbees_only",
+        );
+      } else {
+        _activeXpressPdfPath = null;
+      }
+
+      _activePerSkuPdfPaths = {};
+      for (final entry in result.perSkuPdfs.entries) {
+        final clean = entry.key.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+        final path = await ReportGeneratorService.saveReportToFile(entry.value, "sku_$clean");
+        _activePerSkuPdfPaths[entry.key] = path;
+      }
 
       _processingProgress = 1.0;
       _statusMessage = "Completed! ${_activeOrderItems.length} labels processed.";
@@ -149,6 +193,33 @@ class LabelBatchProvider with ChangeNotifier {
     }
   }
 
+  Future<void> shareWithoutXpressPdf() async {
+    if (_activeWithoutXpressPdfPath != null) {
+      await Share.shareXFiles(
+        [XFile(_activeWithoutXpressPdfPath!)],
+        text: 'Labels Without XpressBees',
+      );
+    }
+  }
+
+  Future<void> shareXpressPdf() async {
+    if (_activeXpressPdfPath != null) {
+      await Share.shareXFiles(
+        [XFile(_activeXpressPdfPath!)],
+        text: 'XpressBees Labels Only',
+      );
+    }
+  }
+
+  Future<void> shareSummaryPdf() async {
+    if (_activeSummaryPdfPath != null) {
+      await Share.shareXFiles(
+        [XFile(_activeSummaryPdfPath!)],
+        text: 'Aggregated Order Summary',
+      );
+    }
+  }
+
   Future<void> sharePickListPdf() async {
     if (_activePickListPdfPath != null) {
       await Share.shareXFiles(
@@ -167,13 +238,28 @@ class LabelBatchProvider with ChangeNotifier {
     }
   }
 
+  Future<void> sharePerSkuPdf(String sku) async {
+    final path = _activePerSkuPdfPaths[sku];
+    if (path != null) {
+      await Share.shareXFiles(
+        [XFile(path)],
+        text: 'Labels for SKU: $sku',
+      );
+    }
+  }
+
   void clearActiveBatch() {
     _activeOrderItems = [];
     _activeCroppedPdfBytes = null;
     _activeCroppedPdfPath = null;
+    _activeWithoutXpressPdfPath = null;
+    _activeXpressPdfPath = null;
+    _activeSummaryPdfPath = null;
     _activePickListPdfPath = null;
     _activeManifestPdfPath = null;
+    _activePerSkuPdfPaths = {};
     _statusMessage = 'Ready';
     notifyListeners();
   }
 }
+
