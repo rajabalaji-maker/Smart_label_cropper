@@ -14,15 +14,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Flutter
+      - name: Setup Flutter (Pinned LTS 3.24.5)
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.24.5'
           channel: 'stable'
+          cache: true
 
       - name: Configure Android Project
         run: |
@@ -31,21 +33,14 @@ jobs:
           mv temp_proj/android .
           rm -rf temp_proj
           mkdir -p assets
-          # Set minSdk to 21 for modern plugins (file_picker & printing)
+          # Set minSdk to 21
           echo "flutter.minSdkVersion=21" >> android/local.properties
-          find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/minSdk(Version)?[[:space:]=]+flutter\.minSdkVersion/minSdk = 21/g' {} + 2>/dev/null || true
-          find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/minSdkVersion[[:space:]]+flutter\.minSdkVersion/minSdkVersion 21/g' {} + 2>/dev/null || true
+          find android -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -exec sed -i -E 's/minSdk(Version)?[[:space:]=]+flutter\.minSdkVersion/minSdkVersion 21/g' {} + 2>/dev/null || true
           sed -i 's/android:label="tony_max_mobile"/android:label="Tony Max Orders"/g' android/app/src/main/AndroidManifest.xml 2>/dev/null || true
 
-          # Bypass AAR metadata compileSdk checks for older plugins (like file_picker)
-          echo "android.suppressUnsupportedCompileSdk=36" >> android/gradle.properties
-          echo "android.dependency.enforceCompileSdk=false" >> android/gradle.properties
-          if [ -f android/build.gradle.kts ]; then
-            printf "\nallprojects {\n    tasks.configureEach {\n        if (name.contains(\"AarMetadata\", ignoreCase = true)) {\n            setEnabled(false)\n        }\n    }\n}\n" >> android/build.gradle.kts
-          fi
-          if [ -f android/build.gradle ]; then
-            printf "\nallprojects {\n    tasks.configureEach { task ->\n        if (task.name.contains(\"AarMetadata\")) {\n            task.enabled = false\n        }\n    }\n}\n" >> android/build.gradle
-          fi
+          # Add Google Maven mirror to prevent 403 Forbidden rate limits
+          find android -type f \( -name "build.gradle" -o -name "settings.gradle" \) -exec sed -i 's|mavenCentral()|maven { url "https://maven-central.storage-download.googleapis.com/maven2/" }\n        mavenCentral()|g' {} + 2>/dev/null || true
+          find android -type f \( -name "build.gradle.kts" -o -name "settings.gradle.kts" \) -exec sed -i 's|mavenCentral()|maven("https://maven-central.storage-download.googleapis.com/maven2/")\n        mavenCentral()|g' {} + 2>/dev/null || true
 
       - name: Install Dependencies
         run: flutter pub get
