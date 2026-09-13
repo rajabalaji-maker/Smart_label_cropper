@@ -26,7 +26,10 @@ jobs:
           channel: 'stable'
 
       - name: Configure Android Project
-        run: flutter create . --project-name=tony_max_mobile --platforms=android --org=com.tonymax --overwrite
+        run: |
+          flutter create temp_proj --project-name=tony_max_mobile --platforms=android --org=com.tonymax
+          cp -rn temp_proj/android .
+          rm -rf temp_proj
 
       - name: Install Dependencies
         run: flutter pub get
