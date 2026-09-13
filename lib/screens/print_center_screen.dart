@@ -221,7 +221,7 @@ class _PdfActionTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final MaterialColor color;
+  final Color color;
   final bool isEnabled;
   final VoidCallback? onShare;
   final VoidCallback? onPrint;
@@ -247,8 +247,8 @@ class _PdfActionTile extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isEnabled ? color.shade50 : Colors.grey.shade100,
-          child: Icon(icon, color: isEnabled ? color.shade700 : Colors.grey.shade400),
+          backgroundColor: isEnabled ? color.withOpacity(0.12) : Colors.grey.shade100,
+          child: Icon(icon, color: isEnabled ? color : Colors.grey.shade400),
         ),
         title: Text(
           title,

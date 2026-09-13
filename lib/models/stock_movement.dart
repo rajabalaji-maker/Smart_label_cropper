@@ -21,6 +21,9 @@ class StockMovement {
     this.note,
   });
 
+  int get qtyDelta => qtyChange;
+  String get timestamp => movementAt;
+
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,

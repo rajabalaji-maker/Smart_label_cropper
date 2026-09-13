@@ -337,14 +337,14 @@ class HomeDashboardScreen extends StatelessWidget {
                 child: ListTile(
                   dense: true,
                   leading: Icon(
-                    m.qtyDelta < 0 ? Icons.remove_circle_outline : Icons.add_circle_outline,
-                    color: m.qtyDelta < 0 ? Colors.red : Colors.green,
+                    m.qtyChange < 0 ? Icons.remove_circle_outline : Icons.add_circle_outline,
+                    color: m.qtyChange < 0 ? Colors.red : Colors.green,
                   ),
                   title: Text(
-                    'SKU #${m.inventoryId}: ${m.qtyDelta > 0 ? "+" : ""}${m.qtyDelta} pcs (${m.reason})',
+                    '${m.sku} (${m.size}): ${m.qtyChange > 0 ? "+" : ""}${m.qtyChange} pcs',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: Text(m.timestamp),
+                  subtitle: Text('${m.reason} • ${m.movementAt}'),
                 ),
               )),
           ],
@@ -357,7 +357,7 @@ class HomeDashboardScreen extends StatelessWidget {
 class _HubCard extends StatelessWidget {
   final String title;
   final IconData icon;
-  final MaterialColor color;
+  final Color color;
   final VoidCallback onTap;
 
   const _HubCard({

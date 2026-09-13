@@ -294,7 +294,7 @@ class PdfCropperService {
     required List<Map<String, dynamic>> highlights,
   }) {
     // Create landscape section so dimensions are width: 595.0, height: cropHeight
-    final section = doc.sections.add();
+    final section = doc.sections!.add();
     section.pageSettings.margins.all = 0;
     section.pageSettings.orientation = PdfPageOrientation.landscape;
     section.pageSettings.size = Size(595.0, cropHeight);
