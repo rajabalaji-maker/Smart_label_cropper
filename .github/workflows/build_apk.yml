@@ -44,6 +44,14 @@ jobs:
           find android -type f \( -name "build.gradle" -o -name "settings.gradle" \) -exec sed -i 's|mavenCentral()|maven { url "https://maven-central.storage-download.googleapis.com/maven2/" }\n        mavenCentral()|g' {} + 2>/dev/null || true
           find android -type f \( -name "build.gradle.kts" -o -name "settings.gradle.kts" \) -exec sed -i 's|mavenCentral()|maven("https://maven-central.storage-download.googleapis.com/maven2/")\n        mavenCentral()|g' {} + 2>/dev/null || true
 
+          # Fix AAPT lStar error: Force subprojects compileSdkVersion 34 and disable verifyReleaseResources
+          if [ -f android/build.gradle ]; then
+            printf '\nsubprojects {\n    afterEvaluate { project ->\n        if (project.hasProperty("android")) {\n            project.android {\n                compileSdkVersion 34\n            }\n        }\n    }\n    tasks.configureEach { task ->\n        if (task.name.contains("verifyReleaseResources") || task.name.contains("VerifyLibraryResources")) {\n            task.enabled = false\n        }\n    }\n}\n' >> android/build.gradle
+          fi
+          if [ -f android/build.gradle.kts ]; then
+            printf '\nsubprojects {\n    tasks.configureEach {\n        if (name.contains("verifyReleaseResources", ignoreCase = true) || name.contains("VerifyLibraryResources", ignoreCase = true)) {\n            setEnabled(false)\n        }\n    }\n}\n' >> android/build.gradle.kts
+          fi
+
       - name: Install Dependencies
         run: flutter pub get
 
