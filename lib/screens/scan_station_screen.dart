@@ -19,7 +19,6 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
   ScanMode _currentMode = ScanMode.lookup;
   String? _statusMessage;
   bool _isSuccess = true;
-  InventoryItem? _matchedItem;
   final List<Map<String, dynamic>> _scanHistory = [];
 
   @override
@@ -71,7 +70,6 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
       setState(() {
         _isSuccess = false;
         _statusMessage = 'No matching SKU or Order found for: "$q"';
-        _matchedItem = null;
       });
       _scanController.clear();
       _focusNode.requestFocus();
@@ -82,7 +80,6 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
     if (_currentMode == ScanMode.lookup) {
       setState(() {
         _isSuccess = true;
-        _matchedItem = item;
         _statusMessage = 'Found: ${item!.sku} (${item.size}) • ${item.quantity} in stock';
         _scanHistory.insert(0, {
           'time': DateTime.now(),
@@ -98,7 +95,6 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
       inventory.updateStock(item.id!, newQty, 'Scan Dispatch: $q');
       setState(() {
         _isSuccess = true;
-        _matchedItem = item!.copyWith(quantity: newQty);
         _statusMessage = 'Dispatched 1 pc of ${item.sku} (${item.size}). Remaining: $newQty';
         _scanHistory.insert(0, {
           'time': DateTime.now(),
@@ -114,7 +110,6 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
       inventory.updateStock(item.id!, newQty, 'Scan Restock: $q');
       setState(() {
         _isSuccess = true;
-        _matchedItem = item!.copyWith(quantity: newQty);
         _statusMessage = 'Restocked 1 pc of ${item.sku} (${item.size}). New Stock: $newQty';
         _scanHistory.insert(0, {
           'time': DateTime.now(),

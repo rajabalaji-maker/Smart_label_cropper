@@ -10,7 +10,6 @@ import 'order_form_screen.dart';
 import 'print_center_screen.dart';
 import 'pick_list_screen.dart';
 import 'manifest_screen.dart';
-import 'reports_history_screen.dart';
 import 'settings_rules_screen.dart';
 
 class HomeDashboardScreen extends StatelessWidget {

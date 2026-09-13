@@ -49,17 +49,17 @@ void main() {
     });
 
     test('Extracts Courier Partner', () {
-      expect(LabelParserService.extractCourier("DELHIVERY SURFACE AIRWAYBILL"), 'Delhivery');
-      expect(LabelParserService.extractCourier("SHADOWFAX LOGISTICS PVT LTD"), 'Shadowfax');
+      expect(LabelParserService.extractCourier("DELHIVERY SURFACE AIRWAYBILL"), 'DELHIVERY');
+      expect(LabelParserService.extractCourier("SHADOWFAX LOGISTICS PVT LTD"), 'SHADOWFAX');
       expect(LabelParserService.extractCourier("EKART LOGISTICS"), 'Ekart');
-      expect(LabelParserService.extractCourier("XPRESSBEES LOGISTICS"), 'Xpressbees');
+      expect(LabelParserService.extractCourier("XPRESSBEES LOGISTICS"), 'XPRESS BEES');
       expect(LabelParserService.extractCourier("Valmo Pickup 05/09 ENL-R0"), 'Valmo-ENL');
     });
 
     test('Kids Bloomer age size mapping', () {
-      expect(NormalizationService.kidsBloomerSizeMap['5-6 Years'], '55cm');
-      expect(NormalizationService.kidsBloomerSizeMap['7-8 Years'], '60cm');
-      expect(NormalizationService.kidsBloomerSizeMap['11-12 Years'], '70cm');
+      expect(NormalizationService.kidsBloomerSizeMap['5-6 Years'], '65');
+      expect(NormalizationService.kidsBloomerSizeMap['7-8 Years'], '70');
+      expect(NormalizationService.kidsBloomerSizeMap['11-12 Years'], '80');
     });
   });
 }

@@ -157,18 +157,28 @@ class PdfCropperService {
       );
     });
 
+    // Determine counts first
+    int xpressCount = 0;
+    int nonXpressCount = 0;
+    for (final p in processedPages) {
+      final OrderItem item = p['orderItem'];
+      final bool isXpress = item.courierPartner.toUpperCase().contains("XPRESS");
+      if (isXpress) {
+        xpressCount++;
+      } else {
+        nonXpressCount++;
+      }
+    }
+
     // Documents for various outputs:
     // 1. All sorted labels
     final fullDoc = PdfDocument();
-    // 2. Without XpressBees
-    final withoutXpressDoc = PdfDocument();
-    // 3. XpressBees only
-    final xpressDoc = PdfDocument();
+    // 2. Without XpressBees (only if mix exists)
+    final PdfDocument? withoutXpressDoc = (xpressCount > 0 && nonXpressCount > 0) ? PdfDocument() : null;
+    // 3. XpressBees only (only if any xpress exists)
+    final PdfDocument? xpressDoc = (xpressCount > 0) ? PdfDocument() : null;
     // 4. Per SKU documents
     final Map<String, PdfDocument> perSkuDocs = {};
-
-    int xpressCount = 0;
-    int nonXpressCount = 0;
 
     for (final p in processedPages) {
       final PdfDocument srcDoc = p['sourceDoc'];
@@ -179,19 +189,10 @@ class PdfCropperService {
       final List<Map<String, dynamic>> highlights = p['bloomerHighlights'];
       final bool isXpress = item.courierPartner.toUpperCase().contains("XPRESS");
 
-      if (isXpress) {
-        xpressCount++;
-      } else {
-        nonXpressCount++;
-      }
-
-      // Extract template from source page
-      final template = srcDoc.pages[pageIdx].createTemplate();
-
-      // Render to Full Document
+      // Render to Full Document using fresh template
       _drawCroppedPage(
         doc: fullDoc,
-        template: template,
+        template: srcDoc.pages[pageIdx].createTemplate(),
         srcSize: srcSize,
         cropHeight: cropH,
         item: item,
@@ -200,11 +201,11 @@ class PdfCropperService {
         highlights: highlights,
       );
 
-      // Render to Without / With Xpress Bees
-      if (isXpress) {
+      // Render to Without / With Xpress Bees if applicable
+      if (isXpress && xpressDoc != null) {
         _drawCroppedPage(
           doc: xpressDoc,
-          template: template,
+          template: srcDoc.pages[pageIdx].createTemplate(),
           srcSize: srcSize,
           cropHeight: cropH,
           item: item,
@@ -212,10 +213,10 @@ class PdfCropperService {
           stampDate: stampDate,
           highlights: highlights,
         );
-      } else {
+      } else if (!isXpress && withoutXpressDoc != null) {
         _drawCroppedPage(
           doc: withoutXpressDoc,
-          template: template,
+          template: srcDoc.pages[pageIdx].createTemplate(),
           srcSize: srcSize,
           cropHeight: cropH,
           item: item,
@@ -229,7 +230,7 @@ class PdfCropperService {
       final perSkuDoc = perSkuDocs.putIfAbsent(item.sku, () => PdfDocument());
       _drawCroppedPage(
         doc: perSkuDoc,
-        template: template,
+        template: srcDoc.pages[pageIdx].createTemplate(),
         srcSize: srcSize,
         cropHeight: cropH,
         item: item,
@@ -239,28 +240,33 @@ class PdfCropperService {
       );
     }
 
-    // Save outputs
+    // CRITICAL: Save ALL documents FIRST before disposing ANY of them,
+    // because Syncfusion templates clone shared resources across cross-tables.
     final List<int> fullOutputBytes = fullDoc.saveSync();
-    fullDoc.dispose();
 
     List<int>? withoutXpressBytes;
-    if (xpressCount > 0 && nonXpressCount > 0) {
+    if (withoutXpressDoc != null) {
       withoutXpressBytes = withoutXpressDoc.saveSync();
     }
-    withoutXpressDoc.dispose();
 
     List<int>? xpressBytes;
-    if (xpressCount > 0) {
+    if (xpressDoc != null) {
       xpressBytes = xpressDoc.saveSync();
     }
-    xpressDoc.dispose();
 
     // Save per-SKU PDFs
     final Map<String, Uint8List> perSkuPdfs = {};
     for (final entry in perSkuDocs.entries) {
       final bytes = entry.value.saveSync();
-      entry.value.dispose();
       perSkuPdfs[entry.key] = Uint8List.fromList(bytes);
+    }
+
+    // Now safely dispose all documents
+    fullDoc.dispose();
+    withoutXpressDoc?.dispose();
+    xpressDoc?.dispose();
+    for (final doc in perSkuDocs.values) {
+      doc.dispose();
     }
 
     // Generate Order Summary & Manifest (safely wrapped so reports never abort label cropping)

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/inventory_item.dart';
 import '../providers/inventory_provider.dart';
 import '../services/normalization_service.dart';
 import '../widgets/stock_counter_dialog.dart';

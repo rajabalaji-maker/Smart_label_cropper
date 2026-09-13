@@ -42,7 +42,9 @@ class LabelParserService {
     if (RegExp(r'\b(ejz)\b', caseSensitive: false).hasMatch(tl) || RegExp(r'\bejz[-_]', caseSensitive: false).hasMatch(tl)) {
       return "Valmo-EJZ";
     }
-    if (tl.contains("valmo-enl")) return "Valmo-ENL";
+    if (RegExp(r'\b(enl)\b', caseSensitive: false).hasMatch(tl) || RegExp(r'\benl[-_]', caseSensitive: false).hasMatch(tl) || tl.contains("valmo-enl")) {
+      return "Valmo-ENL";
+    }
     if (tl.contains("valmo")) return "Valmo";
     if (tl.contains("delhivery") || tl.contains("dhl")) return "DELHIVERY";
     if (tl.contains("shadowfax")) return "SHADOWFAX";

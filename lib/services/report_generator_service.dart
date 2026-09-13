@@ -381,6 +381,109 @@ class ReportGeneratorService {
     return pdf.save();
   }
 
+  /// Generate Production Cutting & Stitching Plan PDF matching desktop app
+  static Future<Uint8List> generateCuttingPlanPdf({
+    required List<Map<String, dynamic>> rows,
+    String brand = "Tony Max",
+    required int totalOrdered,
+    required int totalShortage,
+  }) async {
+    final pdf = pw.Document();
+    final dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now());
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('$brand - Production Cutting & Stitching Plan',
+                      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('Generated: $dateStr', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                ],
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.red100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text(
+                  'To Stitch: $totalShortage pcs',
+                  style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.red900),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey400),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(4.5), // SKU
+              1: const pw.FlexColumnWidth(2.5), // Size
+              2: const pw.FlexColumnWidth(1.8), // Ordered
+              3: const pw.FlexColumnWidth(1.8), // Stock
+              4: const pw.FlexColumnWidth(2.2), // To Stitch
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                children: [
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('SKU', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('SIZE', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('ORDERED', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('STOCK', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('TO STITCH', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                ],
+              ),
+              ...rows.map((r) {
+                final int shortage = r['shortage'] ?? 0;
+                return pw.TableRow(
+                  decoration: shortage > 0 ? const pw.BoxDecoration(color: PdfColors.red50) : null,
+                  children: [
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(r['sku'] ?? '', style: const pw.TextStyle(fontSize: 10))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(r['size'] ?? '', style: const pw.TextStyle(fontSize: 10))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${r['ordered'] ?? 0}', textAlign: pw.TextAlign.center, style: const pw.TextStyle(fontSize: 10))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${r['stock'] ?? 0}', textAlign: pw.TextAlign.center, style: const pw.TextStyle(fontSize: 10))),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(
+                        shortage > 0 ? '$shortage' : '-',
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 11,
+                          fontWeight: pw.FontWeight.bold,
+                          color: shortage > 0 ? PdfColors.red800 : PdfColors.green800,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                children: [
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('TOTAL', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('')),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('$totalOrdered', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold))),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('')),
+                  pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text('$totalShortage', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: totalShortage > 0 ? PdfColors.red800 : PdfColors.green800))),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
   /// Save PDF bytes to file
   static Future<String> saveReportToFile(Uint8List pdfBytes, String prefix) async {
     final dir = await getApplicationDocumentsDirectory();
