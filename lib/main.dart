@@ -47,14 +47,6 @@ class TonyMaxMobileApp extends StatelessWidget {
                 foregroundColor: Colors.black87,
               ),
               scaffoldBackgroundColor: const Color(0xFFF9FAFB),
-              cardTheme: CardThemeData(
-                elevation: 0,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
             ),
             home: const MainNavigationHolder(),
           );
