@@ -26,16 +26,14 @@ jobs:
 
       - name: Configure Android Project
         run: |
-          cp android/app/src/main/AndroidManifest.xml /tmp/AndroidManifest.xml 2>/dev/null || true
           rm -rf android
           flutter create temp_proj --project-name=tony_max_mobile --platforms=android --org=com.tonymax
           mv temp_proj/android .
           rm -rf temp_proj
-          cp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml 2>/dev/null || true
           mkdir -p assets
 
       - name: Install Dependencies
-        run: flutter pub get -v
+        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
