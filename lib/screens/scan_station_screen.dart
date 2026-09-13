@@ -76,45 +76,51 @@ class _ScanStationScreenState extends State<ScanStationScreen> {
       return;
     }
 
+    final validItem = item;
+
     // Process according to mode
     if (_currentMode == ScanMode.lookup) {
       setState(() {
         _isSuccess = true;
-        _statusMessage = 'Found: ${item!.sku} (${item.size}) • ${item.quantity} in stock';
+        _statusMessage = 'Found: ${validItem.sku} (${validItem.size}) • ${validItem.quantity} in stock';
         _scanHistory.insert(0, {
           'time': DateTime.now(),
-          'sku': item.sku,
-          'size': item.size,
+          'sku': validItem.sku,
+          'size': validItem.size,
           'action': 'Lookup',
-          'stock': item.quantity,
+          'stock': validItem.quantity,
           'query': q,
         });
       });
     } else if (_currentMode == ScanMode.dispatch) {
-      final newQty = item.quantity > 0 ? item.quantity - 1 : 0;
-      inventory.updateStock(item.id!, newQty, 'Scan Dispatch: $q');
+      final newQty = validItem.quantity > 0 ? validItem.quantity - 1 : 0;
+      if (validItem.id != null) {
+        inventory.updateStock(validItem.id!, newQty, 'Scan Dispatch: $q');
+      }
       setState(() {
         _isSuccess = true;
-        _statusMessage = 'Dispatched 1 pc of ${item.sku} (${item.size}). Remaining: $newQty';
+        _statusMessage = 'Dispatched 1 pc of ${validItem.sku} (${validItem.size}). Remaining: $newQty';
         _scanHistory.insert(0, {
           'time': DateTime.now(),
-          'sku': item.sku,
-          'size': item.size,
+          'sku': validItem.sku,
+          'size': validItem.size,
           'action': 'Dispatched (-1)',
           'stock': newQty,
           'query': q,
         });
       });
     } else if (_currentMode == ScanMode.restock) {
-      final newQty = item.quantity + 1;
-      inventory.updateStock(item.id!, newQty, 'Scan Restock: $q');
+      final newQty = validItem.quantity + 1;
+      if (validItem.id != null) {
+        inventory.updateStock(validItem.id!, newQty, 'Scan Restock: $q');
+      }
       setState(() {
         _isSuccess = true;
-        _statusMessage = 'Restocked 1 pc of ${item.sku} (${item.size}). New Stock: $newQty';
+        _statusMessage = 'Restocked 1 pc of ${validItem.sku} (${validItem.size}). New Stock: $newQty';
         _scanHistory.insert(0, {
           'time': DateTime.now(),
-          'sku': item.sku,
-          'size': item.size,
+          'sku': validItem.sku,
+          'size': validItem.size,
           'action': 'Restocked (+1)',
           'stock': newQty,
           'query': q,
