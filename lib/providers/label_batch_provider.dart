@@ -79,7 +79,8 @@ class LabelBatchProvider with ChangeNotifier {
       return await _executeBatchProcessing(pdfBytesList);
     } catch (e, stack) {
       debugPrint("Error processing PDFs: $e\n$stack");
-      _lastError = e.toString();
+      final stackTop = stack.toString().split('\n').take(2).join('\n');
+      _lastError = "$e\n$stackTop";
       _statusMessage = "Failed: $e";
       return false;
     } finally {
@@ -109,7 +110,8 @@ class LabelBatchProvider with ChangeNotifier {
       return await _executeBatchProcessing(pdfBytesList);
     } catch (e, stack) {
       debugPrint("Error processing PDFs: $e\n$stack");
-      _lastError = e.toString();
+      final stackTop = stack.toString().split('\n').take(2).join('\n');
+      _lastError = "$e\n$stackTop";
       _statusMessage = "Failed: $e";
       return false;
     } finally {
@@ -144,20 +146,22 @@ class LabelBatchProvider with ChangeNotifier {
     }
 
     try {
-      if (result.manifestPdfBytes != null) {
-        _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(result.manifestPdfBytes!, "manifest");
-      } else {
-        final manifestBytes = await ReportGeneratorService.generateManifestPdf(items: _activeOrderItems);
+      final manifestBytes = result.manifestPdfBytes;
+      if (manifestBytes != null) {
         _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(manifestBytes, "manifest");
+      } else {
+        final generated = await ReportGeneratorService.generateManifestPdf(items: _activeOrderItems);
+        _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(generated, "manifest");
       }
     } catch (e) {
       debugPrint("Warning: manifest generation failed: $e");
     }
 
     try {
-      if (result.summaryPdfBytes != null) {
+      final summaryBytes = result.summaryPdfBytes;
+      if (summaryBytes != null) {
         _activeSummaryPdfPath = await ReportGeneratorService.saveReportToFile(
-          result.summaryPdfBytes!,
+          summaryBytes,
           "order_summary",
         );
       }
@@ -166,9 +170,10 @@ class LabelBatchProvider with ChangeNotifier {
     }
 
     try {
-      if (result.withoutXpressBeesBytes != null) {
+      final withoutXpressBytes = result.withoutXpressBeesBytes;
+      if (withoutXpressBytes != null) {
         _activeWithoutXpressPdfPath = await ReportGeneratorService.saveReportToFile(
-          result.withoutXpressBeesBytes!,
+          withoutXpressBytes,
           "without_xpressbees",
         );
       } else {
@@ -179,9 +184,10 @@ class LabelBatchProvider with ChangeNotifier {
     }
 
     try {
-      if (result.xpressBeesBytes != null) {
+      final xpressBytes = result.xpressBeesBytes;
+      if (xpressBytes != null) {
         _activeXpressPdfPath = await ReportGeneratorService.saveReportToFile(
-          result.xpressBeesBytes!,
+          xpressBytes,
           "xpressbees_only",
         );
       } else {

@@ -226,9 +226,9 @@ class PdfCropperService {
       }
 
       // Render to Per-SKU documents
-      perSkuDocs.putIfAbsent(item.sku, () => PdfDocument());
+      final perSkuDoc = perSkuDocs.putIfAbsent(item.sku, () => PdfDocument());
       _drawCroppedPage(
-        doc: perSkuDocs[item.sku]!,
+        doc: perSkuDoc,
         template: template,
         srcSize: srcSize,
         cropHeight: cropH,
@@ -274,6 +274,7 @@ class PdfCropperService {
     try {
       manifestBytes = await ReportGeneratorService.generateManifestPdf(items: allItems);
     } catch (_) {}
+
     // Persist full sorted PDF to device storage
     final outputDir = await getApplicationDocumentsDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -304,13 +305,22 @@ class PdfCropperService {
     required List<Map<String, dynamic>> highlights,
   }) {
     // Create landscape section so dimensions are width: 595.0, height: cropHeight
-    final section = doc.sections!.add();
-    section.pageSettings.margins.all = 0;
-    section.pageSettings.orientation = PdfPageOrientation.landscape;
-    section.pageSettings.size = Size(595.0, cropHeight);
-    section.pageSettings.rotate = PdfPageRotateAngle.rotateAngle90;
-
-    final page = section.pages.add();
+    final PdfPage page;
+    final sections = doc.sections;
+    if (sections != null) {
+      final section = sections.add();
+      section.pageSettings.margins.all = 0;
+      section.pageSettings.orientation = PdfPageOrientation.landscape;
+      section.pageSettings.size = Size(595.0, cropHeight);
+      section.pageSettings.rotate = PdfPageRotateAngle.rotateAngle90;
+      page = section.pages.add();
+    } else {
+      doc.pageSettings.margins.all = 0;
+      doc.pageSettings.orientation = PdfPageOrientation.landscape;
+      doc.pageSettings.size = Size(595.0, cropHeight);
+      doc.pageSettings.rotate = PdfPageRotateAngle.rotateAngle90;
+      page = doc.pages.add();
+    }
 
     // Draw the source template starting from top-left (0, 0)
     // The page height clips out the Tax Invoice below cropHeight!

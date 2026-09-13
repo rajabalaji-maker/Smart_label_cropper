@@ -193,7 +193,7 @@ class NormalizationService {
 
     // Match CM format e.g. "80cm"
     final cmMatch = RegExp(r'^(\d{2,3})\s*cm[s]?$', caseSensitive: false).firstMatch(cleaned);
-    if (cmMatch != null) {
+    if (cmMatch != null && cmMatch.group(1) != null) {
       final val = int.tryParse(cmMatch.group(1)!);
       if (val != null && cmToLabel.containsKey(val)) {
         return cmToLabel[val]!;

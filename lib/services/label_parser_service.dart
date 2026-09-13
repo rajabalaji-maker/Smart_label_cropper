@@ -63,7 +63,7 @@ class LabelParserService {
     if (text.isEmpty) return (false, 0);
 
     final prodMatch = RegExp(r'Product Details.*?(?=\n\n|TAX INVOICE|\Z)', caseSensitive: false, dotAll: true).firstMatch(text);
-    final content = prodMatch != null ? prodMatch.group(0)! : text;
+    final content = prodMatch?.group(0) ?? text;
     final lines = content.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
 
     int matches = 0;
@@ -102,14 +102,14 @@ class LabelParserService {
   static String detectOrderNumber(String text) {
     if (text.isEmpty) return "";
     final prodMatch = RegExp(r'Product Details.*?(?=\n\n|TAX INVOICE|\Z)', caseSensitive: false, dotAll: true).firstMatch(text);
-    final block = prodMatch != null ? prodMatch.group(0)! : text;
+    final block = prodMatch?.group(0) ?? text;
 
     final m = orderNoRegex.firstMatch(block);
-    if (m != null) {
+    if (m != null && m.group(1) != null) {
       return m.group(1)!.trim();
     }
     final m2 = orderNoFallbackRegex.firstMatch(block);
-    if (m2 != null) {
+    if (m2 != null && m2.group(0) != null) {
       return m2.group(0)!.trim();
     }
     return "";
@@ -121,9 +121,9 @@ class LabelParserService {
 
     final prodMatch = RegExp(r'Product Details.*?(?=\n\n|TAX INVOICE|\Z)', caseSensitive: false, dotAll: true).firstMatch(text);
     if (prodMatch != null) {
-      final section = prodMatch.group(0)!;
+      final section = prodMatch.group(0) ?? "";
       final skuMatch = RegExp(r'SKU:\s*([^\n]+)', caseSensitive: false).firstMatch(section);
-      if (skuMatch != null) {
+      if (skuMatch != null && skuMatch.group(1) != null) {
         final val = skuMatch.group(1)!.trim().toLowerCase();
         if (val.contains("bloomer") && val.contains("plain")) return ("Plain Bloomer", "high");
         if (val.contains("bloomer") && val.contains("print")) return ("Printed Bloomer", "high");
@@ -168,7 +168,7 @@ class LabelParserService {
 
     final prodMatch = RegExp(r'Product Details.*?(?=\n\n|TAX INVOICE|\Z)', caseSensitive: false, dotAll: true).firstMatch(text);
     if (prodMatch != null) {
-      final lines = prodMatch.group(0)!.split('\n').map((l) => l.trim()).toList();
+      final lines = (prodMatch.group(0) ?? "").split('\n').map((l) => l.trim()).toList();
       final skuKeywords = ["bloomer", "panty", "button", "t-shirt", "tshirt", "seri", "trunk"];
 
       final List<int> skuIndices = [];
@@ -186,7 +186,7 @@ class LabelParserService {
           if (cand.isEmpty) continue;
 
           final mLetter = letterRegex.firstMatch(cand);
-          if (mLetter != null) {
+          if (mLetter != null && mLetter.group(1) != null) {
             var key = mLetter.group(1)!.toUpperCase();
             if (key == "XXL") key = "2XL";
             if (NormalizationService.letterToLabel.containsKey(key)) {
@@ -198,7 +198,7 @@ class LabelParserService {
           }
 
           final mCm = cmRegex.firstMatch(cand);
-          if (mCm != null) {
+          if (mCm != null && mCm.group(1) != null) {
             final val = int.tryParse(mCm.group(1)!);
             if (val != null && NormalizationService.cmToLabel.containsKey(val)) {
               sizeLabel = NormalizationService.cmToLabel[val]!;
@@ -209,7 +209,7 @@ class LabelParserService {
           }
 
           final mBare = RegExp(r'^(\d{2,3})$').firstMatch(cand);
-          if (mBare != null) {
+          if (mBare != null && mBare.group(1) != null) {
             final val = int.tryParse(mBare.group(1)!);
             if (val != null && NormalizationService.cmToLabel.containsKey(val)) {
               sizeLabel = NormalizationService.cmToLabel[val]!;
@@ -241,7 +241,7 @@ class LabelParserService {
             final lk = lines[k];
             if (lk.isEmpty) continue;
             final mQty = RegExp(r'\b(?:Qty|QTY|Quantity)[:\s]*([0-9]{1,4})\b', caseSensitive: false).firstMatch(lk);
-            if (mQty != null) {
+            if (mQty != null && mQty.group(1) != null) {
               final parsed = int.tryParse(mQty.group(1)!);
               if (parsed != null && parsed > 0 && parsed <= 1000) {
                 qty = parsed;
@@ -261,7 +261,7 @@ class LabelParserService {
 
     // Fallback search across whole page
     final mAnyQty = RegExp(r'\b(?:Qty|Quantity)[:\s]*([0-9]{1,4})\b', caseSensitive: false).firstMatch(text);
-    if (mAnyQty != null) {
+    if (mAnyQty != null && mAnyQty.group(1) != null) {
       final parsed = int.tryParse(mAnyQty.group(1)!);
       if (parsed != null && parsed > 0 && parsed <= 1000) {
         qty = parsed;
@@ -270,19 +270,19 @@ class LabelParserService {
     }
 
     final mMonths = monthsRegex.firstMatch(text);
-    if (mMonths != null && sizeLabel.isEmpty) {
+    if (mMonths != null && mMonths.group(1) != null && mMonths.group(2) != null && sizeLabel.isEmpty) {
       sizeLabel = "${mMonths.group(1)}-${mMonths.group(2)} Months";
       confidence = "medium";
     }
 
     final mYears = yearsRegex.firstMatch(text);
-    if (mYears != null && sizeLabel.isEmpty) {
+    if (mYears != null && mYears.group(1) != null && mYears.group(2) != null && sizeLabel.isEmpty) {
       sizeLabel = "${mYears.group(1)}-${mYears.group(2)} Years";
       confidence = "medium";
     }
 
     final mLetter = letterRegex.firstMatch(text);
-    if (mLetter != null && sizeLabel.isEmpty) {
+    if (mLetter != null && mLetter.group(1) != null && sizeLabel.isEmpty) {
       var key = mLetter.group(1)!.toUpperCase();
       if (key == "XXL") key = "2XL";
       if (NormalizationService.letterToLabel.containsKey(key)) {
@@ -292,7 +292,7 @@ class LabelParserService {
     }
 
     final mCm = cmRegex.firstMatch(text);
-    if (mCm != null && sizeLabel.isEmpty) {
+    if (mCm != null && mCm.group(1) != null && sizeLabel.isEmpty) {
       final val = int.tryParse(mCm.group(1)!);
       if (val != null && NormalizationService.cmToLabel.containsKey(val)) {
         sizeLabel = NormalizationService.cmToLabel[val]!;
@@ -370,7 +370,7 @@ class LabelParserService {
   static OrderItem _parseAmazon(String text, int pageIndex, String courier, String now) {
     String orderNo = "AMZ-ORDER";
     final match = amazonOrderRegex.firstMatch(text);
-    if (match != null) {
+    if (match != null && match.group(0) != null) {
       orderNo = match.group(0)!;
     }
 
@@ -391,7 +391,7 @@ class LabelParserService {
   static OrderItem _parseFlipkart(String text, int pageIndex, String courier, String now) {
     String orderNo = "FK-ORDER";
     final match = flipkartOrderRegex.firstMatch(text);
-    if (match != null) {
+    if (match != null && match.group(0) != null) {
       orderNo = match.group(0)!;
     }
 

@@ -257,8 +257,8 @@ class ReportGeneratorService {
     int grandTotal = 0;
 
     for (final item in items) {
-      skuSizeTotals.putIfAbsent(item.sku, () => {});
-      skuSizeTotals[item.sku]![item.size] = (skuSizeTotals[item.sku]![item.size] ?? 0) + item.qty;
+      final sizeMap = skuSizeTotals.putIfAbsent(item.sku, () => {});
+      sizeMap[item.size] = (sizeMap[item.size] ?? 0) + item.qty;
       skuOnlyTotals[item.sku] = (skuOnlyTotals[item.sku] ?? 0) + item.qty;
       grandTotal += item.qty;
     }
@@ -323,10 +323,10 @@ class ReportGeneratorService {
               ),
               for (final sku in sortedSkus)
                 ...(() {
-                  final sizes = skuSizeTotals[sku]!.keys.toList()
+                  final sizes = (skuSizeTotals[sku]?.keys.toList() ?? [])
                     ..sort((a, b) => NormalizationService.sizeSortRank(a).compareTo(NormalizationService.sizeSortRank(b)));
                   return sizes.map((size) {
-                    final qty = skuSizeTotals[sku]![size]!;
+                    final qty = skuSizeTotals[sku]?[size] ?? 0;
                     return pw.TableRow(
                       children: [
                         pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(sku, style: const pw.TextStyle(fontSize: 10))),

@@ -30,8 +30,8 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     // Calculate aggregated demand from active batch or recent batches
     final Map<String, Map<String, int>> demand = {};
     for (final item in batch.activeOrderItems) {
-      demand.putIfAbsent(item.sku, () => {});
-      demand[item.sku]![item.size] = (demand[item.sku]![item.size] ?? 0) + item.qty;
+      final sizeMap = demand.putIfAbsent(item.sku, () => {});
+      sizeMap[item.size] = (sizeMap[item.size] ?? 0) + item.qty;
     }
 
     // Build rows of SKU, Size, Ordered, Current Stock, Shortage
