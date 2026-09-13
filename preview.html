@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tony Max Mobile - Interactive App Test Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #1e293b;
+    }
+    .preview-header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #f8fafc;
+    }
+    .preview-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .preview-header p { font-size: 14px; color: #94a3b8; }
+    .preview-badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    /* Mobile Device Frame */
+    .phone-container {
+      width: 390px;
+      height: 800px;
+      background: #ffffff;
+      border-radius: 46px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 12px #1e293b, 0 0 0 14px #334155;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 28px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+      z-index: 10;
+    }
+    .dynamic-island {
+      width: 110px;
+      height: 24px;
+      background: #000;
+      border-radius: 20px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* App Header */
+    .app-header {
+      padding: 12px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-title { font-size: 17px; font-weight: 700; color: #1e1b4b; }
+    .header-icons { display: flex; gap: 14px; font-size: 18px; cursor: pointer; color: #4338ca; }
+
+    /* Screen Content Area */
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      background: #f8fafc;
+      position: relative;
+    }
+    .tab-view { display: none; padding: 16px; }
+    .tab-view.active { display: block; }
+
+    /* Dashboard Widgets */
+    .banner {
+      background: linear-gradient(135deg, #4338ca, #7e22ce);
+      border-radius: 16px;
+      padding: 16px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .banner-tag { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .banner-title { font-size: 16px; font-weight: 700; margin: 4px 0 12px; }
+    .btn-white {
+      background: #fff;
+      color: #4338ca;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .stat-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1.5px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .stat-box:hover { border-color: #4338ca; transform: translateY(-2px); }
+    .stat-box.alert { border-color: #fca5a5; background: #fef2f2; }
+    .stat-label { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #1e1b4b; }
+    .stat-box.alert .stat-value { color: #dc2626; }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 16px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .card-low { border-color: #fca5a5; background: #fff5f5; }
+    .card-flex { display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .card-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    /* Quantity Steppers */
+    .qty-stepper { display: flex; align-items: center; gap: 8px; }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:active { background: #e2e8f0; }
+    .qty-display { font-size: 14px; font-weight: 700; min-width: 32px; text-align: center; }
+
+    /* Label Items */
+    .label-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .tag-meesho { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+    .tag-qty { background: #fee2e2; color: #b91c1c; border: 1px solid #f87171; font-weight: 800; }
+    .tag-pill { background: #f1f5f9; color: #475569; font-size: 11px; padding: 2px 8px; border-radius: 12px; margin-right: 4px; font-weight: 500; }
+
+    /* Bottom Navigation Bar */
+    .nav-bar {
+      height: 64px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 10;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      flex: 1;
+      padding: 8px 0;
+    }
+    .nav-item.active { color: #4338ca; }
+    .nav-icon { font-size: 20px; }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: #4338ca;
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-outline {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #4338ca;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-header">
+    <h1>Tony Max Mobile - Interactive Test Simulator</h1>
+    <p>Test the offline mobile app UI, PDF cropper, stock counters, pick lists, and manifests.</p>
+    <div class="preview-badge">100% Client-Side Simulation • Double-Click to Test Anywhere</div>
+  </div>
+
+  <div class="phone-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>09:41</span>
+      <div class="dynamic-island"></div>
+      <span>100% 🔋</span>
+    </div>
+
+    <!-- App Header -->
+    <div class="app-header">
+      <div class="app-title" id="headerTitle">Tony Max</div>
+      <div class="header-icons">
+        <span onclick="reloadStock()" title="Refresh">🔄</span>
+        <span onclick="switchTab('tab-settings')" title="Settings">⚙️</span>
+      </div>
+    </div>
+
+    <!-- Screen Content -->
+    <div class="screen-content">
+
+      <!-- TAB 1: HOME DASHBOARD -->
+      <div id="tab-home" class="tab-view active">
+        <div class="banner">
+          <div class="banner-tag">Warehouse Mobile Station</div>
+          <div class="banner-title">Meesho Order Sorter & Label Cropper</div>
+          <button class="btn-white" onclick="switchTab('tab-cropper')">
+            📄 Process Shipping PDF
+          </button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box" onclick="switchTab('tab-inventory')">
+            <div class="stat-label">Total Stock</div>
+            <div class="stat-value" id="statTotalStock">200</div>
+          </div>
+          <div class="stat-box" onclick="switchTab('tab-inventory')">
+            <div class="stat-label">Active SKUs</div>
+            <div class="stat-value">5</div>
+          </div>
+          <div class="stat-box alert" onclick="switchTab('tab-inventory')">
+            <div class="stat-label">Low Stock</div>
+            <div class="stat-value" id="statLowStock">2</div>
+          </div>
+          <div class="stat-box" onclick="switchTab('tab-history')">
+            <div class="stat-label">Batches Done</div>
+            <div class="stat-value" id="statBatches">4</div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <span>⚠️ Low Stock Alerts</span>
+          <span style="font-size:12px; color:#4338ca; cursor:pointer;" onclick="switchTab('tab-inventory')">View All</span>
+        </div>
+
+        <div id="dashboardLowStockList">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="section-title">
+          <span>📋 Recent Movements</span>
+        </div>
+        <div class="card">
+          <div class="card-flex">
+            <div>
+              <div class="card-title">Plain Bloomer (80cm / S)</div>
+              <div class="card-sub">Order Deduction • Meesho Batch #14</div>
+            </div>
+            <div style="font-weight:700; color:#dc2626;">-2</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-flex">
+            <div>
+              <div class="card-title">Kids T-Shirt (1-2 Years)</div>
+              <div class="card-sub">Manual Restock</div>
+            </div>
+            <div style="font-weight:700; color:#16a34a;">+25</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CROPPER & SORTER -->
+      <div id="tab-cropper" class="tab-view">
+        <div style="text-align:center; padding: 20px 0;">
+          <div style="font-size: 48px;">✂️</div>
+          <div style="font-size: 16px; font-weight: 700; margin: 8px 0;">On-Device PDF Cropper</div>
+          <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">
+            Trims shipping labels above <b>"Original For Recipient"</b> or keeps top 80% for <b>"Exchange"</b>. Stamps QTY badge and auto-sorts.
+          </p>
+
+          <button class="btn-primary" onclick="simulatePdfCrop()">
+            📁 Run Test PDF Processing
+          </button>
+        </div>
+
+        <div id="cropProgressArea" style="display:none; margin: 12px 0;">
+          <div class="progress-bar"><div class="progress-fill" id="cropProgressFill"></div></div>
+          <div id="cropProgressText" style="font-size:12px; font-weight:600; color:#4338ca; text-align:center;">Detecting keywords...</div>
+        </div>
+
+        <div id="batchPreviewArea" style="display:none;">
+          <div style="background:#e0e7ff; padding:12px; border-radius:10px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:700; font-size:14px; color:#1e1b4b;">Batch: 3 Labels Detected</div>
+                <div style="font-size:12px; color:#475569;">Total: 5 Units</div>
+              </div>
+              <button style="background:#16a34a; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:600; font-size:12px; cursor:pointer;" onclick="confirmBatch()">
+                ✓ Confirm & Deduct Stock
+              </button>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button class="btn-outline" style="flex:1; font-size:11px;" onclick="alert('Cropped PDF Labels ready for Thermal / A4 Print!')">🖨️ Print Labels</button>
+              <button class="btn-outline" style="flex:1; font-size:11px;" onclick="openPickListModal()">📋 Pick List</button>
+              <button class="btn-outline" style="flex:1; font-size:11px;" onclick="openManifestModal()">🚚 Manifest</button>
+            </div>
+          </div>
+
+          <div id="batchItemsList">
+            <!-- Populated after crop -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: INVENTORY -->
+      <div id="tab-inventory" class="tab-view">
+        <input type="text" id="searchInput" placeholder="🔍 Search SKU, size, or color..." oninput="renderInventory()" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:12px;">
+
+        <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:8px;">
+          <button class="btn-outline" style="padding:4px 10px; font-size:12px;" onclick="setSkuFilter('')">All</button>
+          <button class="btn-outline" style="padding:4px 10px; font-size:12px;" onclick="setSkuFilter('Plain Bloomer')">Plain Bloomer</button>
+          <button class="btn-outline" style="padding:4px 10px; font-size:12px;" onclick="setSkuFilter('Printed Bloomer')">Printed Bloomer</button>
+          <button class="btn-outline" style="padding:4px 10px; font-size:12px;" onclick="setSkuFilter('Plain Panty')">Plain Panty</button>
+          <button class="btn-outline" style="padding:4px 10px; font-size:12px;" onclick="setSkuFilter('Kids T-Shirt')">Kids T-Shirt</button>
+        </div>
+
+        <div id="inventoryList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- TAB 4: HISTORY -->
+      <div id="tab-history" class="tab-view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="font-weight:700; font-size:15px;">Past Batches</div>
+          <button class="btn-outline" onclick="exportCsv()" style="font-size:12px; padding:6px 10px;">📥 Export CSV</button>
+        </div>
+
+        <div id="historyBatchList">
+          <div class="card">
+            <div class="card-flex">
+              <div>
+                <div class="card-title">Batch #14 • Meesho</div>
+                <div class="card-sub">2026-09-12 14:30 • 18 Labels</div>
+              </div>
+              <button style="color:#dc2626; background:none; border:none; font-weight:600; font-size:12px; cursor:pointer;" onclick="undoBatch(14)">↩ Undo</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-flex">
+              <div>
+                <div class="card-title">Batch #13 • Meesho</div>
+                <div class="card-sub">2026-09-11 11:15 • 32 Labels</div>
+              </div>
+              <button style="color:#dc2626; background:none; border:none; font-weight:600; font-size:12px; cursor:pointer;" onclick="undoBatch(13)">↩ Undo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: RULES & SETTINGS -->
+      <div id="tab-settings" class="tab-view">
+        <div class="section-title">Brand Setup</div>
+        <input type="text" id="brandInput" value="Tony Max" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:14px; font-size:13px;" oninput="updateBrandName(this.value)">
+
+        <div class="section-title">PDF Cropping Parameters</div>
+        <label style="font-size:12px; color:#64748b; font-weight:600;">Primary Keyword (Keep above):</label>
+        <input type="text" value="Original For Recipient" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin:4px 0 12px; font-size:13px;">
+
+        <label style="font-size:12px; color:#64748b; font-weight:600;">Secondary Keyword (Exchange):</label>
+        <input type="text" value="Exchange" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin:4px 0 12px; font-size:13px;">
+
+        <label style="font-size:12px; color:#64748b; font-weight:600;">Secondary Top Keep Ratio: 80%</label>
+        <input type="range" min="50" max="95" value="80" style="width:100%; margin:8px 0 16px;">
+
+        <button class="btn-primary" onclick="alert('Configuration saved successfully!')">Save Configuration</button>
+      </div>
+
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <div class="nav-item active" onclick="switchTab('tab-home', this)">
+        <div class="nav-icon">🏠</div>
+        <div>Home</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-cropper', this)">
+        <div class="nav-icon">✂️</div>
+        <div>Cropper</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-inventory', this)">
+        <div class="nav-icon">📦</div>
+        <div>Stock</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-history', this)">
+        <div class="nav-icon">📜</div>
+        <div>History</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-settings', this)">
+        <div class="nav-icon">⚙️</div>
+        <div>Rules</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initial State Mock
+    let inventoryData = [
+      { id: 1, sku: "Plain Bloomer", size: "75cm / XS", color: "Multicolor", qty: 42, threshold: 5 },
+      { id: 2, sku: "Plain Bloomer", size: "80cm / S", color: "Multicolor", qty: 3, threshold: 5 }, // low
+      { id: 3, sku: "Plain Bloomer", size: "85cm / M", color: "Multicolor", qty: 50, threshold: 5 },
+      { id: 4, sku: "Printed Bloomer", size: "80cm / S", color: "Multicolor", qty: 2, threshold: 5 }, // low
+      { id: 5, sku: "Kids T-Shirt", size: "1-2 Years", color: "Multicolor", qty: 35, threshold: 5 },
+      { id: 6, sku: "Plain Panty", size: "32", color: "Multicolor", qty: 28, threshold: 5 },
+    ];
+
+    let currentFilterSku = '';
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+
+      if (el) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      }
+      renderAll();
+    }
+
+    function updateStock(id, delta) {
+      const item = inventoryData.find(i => i.id === id);
+      if (item) {
+        item.qty = Math.max(0, item.qty + delta);
+        renderAll();
+      }
+    }
+
+    function setSkuFilter(sku) {
+      currentFilterSku = sku;
+      renderInventory();
+    }
+
+    function renderInventory() {
+      const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+      const list = document.getElementById('inventoryList');
+      if (!list) return;
+
+      const filtered = inventoryData.filter(i => {
+        const matchesSku = !currentFilterSku || i.sku === currentFilterSku;
+        const matchesSearch = !search || i.sku.toLowerCase().includes(search) || i.size.toLowerCase().includes(search);
+        return matchesSku && matchesSearch;
+      });
+
+      list.innerHTML = filtered.map(item => `
+        <div class="card ${item.qty <= item.threshold ? 'card-low' : ''}">
+          <div class="card-flex">
+            <div>
+              <div class="card-title">${item.sku}</div>
+              <div class="card-sub">${item.size} • ${item.color}</div>
+            </div>
+            <div class="qty-stepper">
+              <button class="qty-btn" onclick="updateStock(${item.id}, -1)">-</button>
+              <div class="qty-display" style="color: ${item.qty <= item.threshold ? '#dc2626' : '#0f172a'}">${item.qty}</div>
+              <button class="qty-btn" onclick="updateStock(${item.id}, 1)">+</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderDashboard() {
+      const totalUnits = inventoryData.reduce((sum, i) => sum + i.qty, 0);
+      const lowStock = inventoryData.filter(i => i.qty <= i.threshold);
+
+      document.getElementById('statTotalStock').innerText = totalUnits;
+      document.getElementById('statLowStock').innerText = lowStock.length;
+
+      const lowList = document.getElementById('dashboardLowStockList');
+      lowList.innerHTML = lowStock.map(item => `
+        <div class="card card-low">
+          <div class="card-flex">
+            <div>
+              <div class="card-title">${item.sku}</div>
+              <div class="card-sub">${item.size} • Only ${item.qty} units left!</div>
+            </div>
+            <button style="background:#16a34a; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;" onclick="updateStock(${item.id}, 20)">+ Restock</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderInventory();
+    }
+
+    function updateBrandName(name) {
+      document.getElementById('headerTitle').innerText = name || 'Tony Max';
+    }
+
+    function simulatePdfCrop() {
+      const progArea = document.getElementById('cropProgressArea');
+      const fill = document.getElementById('cropProgressFill');
+      const text = document.getElementById('cropProgressText');
+      const preview = document.getElementById('batchPreviewArea');
+
+      progArea.style.display = 'block';
+      preview.style.display = 'none';
+
+      fill.style.width = '30%';
+      text.innerText = 'Extracting pages & detecting keywords...';
+
+      setTimeout(() => {
+        fill.style.width = '70%';
+        text.innerText = 'Trimming below "Original For Recipient" & stamping QTY...';
+      }, 500);
+
+      setTimeout(() => {
+        fill.style.width = '100%';
+        text.innerText = 'Done! 3 labels cropped and sorted.';
+        setTimeout(() => {
+          progArea.style.display = 'none';
+          preview.style.display = 'block';
+          renderBatchItems();
+        }, 300);
+      }, 1000);
+    }
+
+    function renderBatchItems() {
+      const itemsList = document.getElementById('batchItemsList');
+      itemsList.innerHTML = `
+        <div class="label-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="tag tag-meesho">Meesho</span>
+            <span style="font-size:11px; font-weight:600;">#987123456_1</span>
+            <span class="tag tag-qty">QTY: 2 PIECES</span>
+          </div>
+          <div style="font-weight:700; font-size:14px;">Plain Bloomer</div>
+          <div style="margin-top:4px;">
+            <span class="tag-pill">Size: 80cm / S</span>
+            <span class="tag-pill">Multicolor</span>
+            <span class="tag-pill" style="color:#c2410c;">🚚 Delhivery</span>
+          </div>
+        </div>
+
+        <div class="label-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="tag tag-meesho">Meesho</span>
+            <span style="font-size:11px; font-weight:600;">#987123457_1</span>
+          </div>
+          <div style="font-weight:700; font-size:14px;">Kids T-Shirt</div>
+          <div style="margin-top:4px;">
+            <span class="tag-pill">Size: 1-2 Years</span>
+            <span class="tag-pill">Multicolor</span>
+            <span class="tag-pill" style="color:#0369a1;">🚚 Shadowfax</span>
+          </div>
+        </div>
+
+        <div class="label-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="tag tag-meesho">Meesho</span>
+            <span style="font-size:11px; font-weight:600;">#987123458_1</span>
+            <span class="tag tag-qty">QTY: 2 PIECES</span>
+          </div>
+          <div style="font-weight:700; font-size:14px;">Plain Panty</div>
+          <div style="margin-top:4px;">
+            <span class="tag-pill">Size: 32</span>
+            <span class="tag-pill">Multicolor</span>
+            <span class="tag-pill" style="color:#c2410c;">🚚 Delhivery</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function confirmBatch() {
+      // Deduct mock stock
+      updateStock(2, -2);
+      updateStock(5, -1);
+      updateStock(6, -2);
+      alert('Batch saved to SQLite! Inventory automatically updated.');
+      switchTab('tab-home');
+    }
+
+    function undoBatch(batchId) {
+      if (confirm(`Undo Batch #${batchId} and restore all deducted stock?`)) {
+        updateStock(2, +2);
+        alert(`Batch #${batchId} has been undone and inventory restored!`);
+      }
+    }
+
+    function openPickListModal() {
+      alert('Warehouse Pick List:\n• Plain Bloomer (80cm / S): 2 pcs\n• Kids T-Shirt (1-2 Years): 1 pcs\n• Plain Panty (Size 32): 2 pcs\n\nTotal to pick: 5 units');
+    }
+
+    function openManifestModal() {
+      alert('Courier Handover Manifest:\n• Delhivery: 2 packets (#987123456_1, #987123458_1)\n• Shadowfax: 1 packet (#987123457_1)\n\nReady for pickup agent signature!');
+    }
+
+    function exportCsv() {
+      let csv = "SKU,Size,Color,Stock\n";
+      inventoryData.forEach(i => {
+        csv += `${i.sku},${i.size},${i.color},${i.qty}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory_stock_${Date.now()}.csv`;
+      a.click();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
