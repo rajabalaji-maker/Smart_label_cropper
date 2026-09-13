@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/import_batch.dart';
@@ -23,6 +24,7 @@ class LabelBatchProvider with ChangeNotifier {
   bool _isProcessing = false;
   double _processingProgress = 0.0;
   String _statusMessage = 'Ready';
+  String? _lastError;
   List<ImportBatch> _pastBatches = [];
 
   List<OrderItem> get activeOrderItems => _activeOrderItems;
@@ -37,6 +39,7 @@ class LabelBatchProvider with ChangeNotifier {
   bool get isProcessing => _isProcessing;
   double get processingProgress => _processingProgress;
   String get statusMessage => _statusMessage;
+  String? get lastError => _lastError;
   List<ImportBatch> get pastBatches => _pastBatches;
 
   int get totalOrderUnits => _activeOrderItems.fold(0, (sum, item) => sum + item.qty);
@@ -46,11 +49,51 @@ class LabelBatchProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Process selected PDF files
+  /// Process selected PlatformFiles (supports direct in-memory bytes from Android ContentResolver or paths)
+  Future<bool> processPlatformFiles(List<PlatformFile> files) async {
+    if (files.isEmpty) return false;
+
+    _isProcessing = true;
+    _lastError = null;
+    _processingProgress = 0.1;
+    _statusMessage = "Reading PDF files...";
+    notifyListeners();
+
+    try {
+      final List<Uint8List> pdfBytesList = [];
+      for (int i = 0; i < files.length; i++) {
+        final f = files[i];
+        Uint8List bytes;
+        if (f.bytes != null && f.bytes!.isNotEmpty) {
+          bytes = f.bytes!;
+        } else if (f.path != null && f.path!.isNotEmpty) {
+          bytes = await File(f.path!).readAsBytes();
+        } else {
+          throw Exception("Cannot read '${f.name}': No data or file path available.");
+        }
+        pdfBytesList.add(bytes);
+        _processingProgress = 0.1 + (0.2 * (i + 1) / files.length);
+        notifyListeners();
+      }
+
+      return await _executeBatchProcessing(pdfBytesList);
+    } catch (e, stack) {
+      debugPrint("Error processing PDFs: $e\n$stack");
+      _lastError = e.toString();
+      _statusMessage = "Failed: $e";
+      return false;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Process selected PDF files (File path legacy compatibility)
   Future<bool> processPdfs(List<File> files) async {
     if (files.isEmpty) return false;
 
     _isProcessing = true;
+    _lastError = null;
     _processingProgress = 0.1;
     _statusMessage = "Reading PDF files...";
     notifyListeners();
@@ -63,40 +106,66 @@ class LabelBatchProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      _statusMessage = "Detecting keywords, cropping & sorting labels...";
-      _processingProgress = 0.5;
+      return await _executeBatchProcessing(pdfBytesList);
+    } catch (e, stack) {
+      debugPrint("Error processing PDFs: $e\n$stack");
+      _lastError = e.toString();
+      _statusMessage = "Failed: $e";
+      return false;
+    } finally {
+      _isProcessing = false;
       notifyListeners();
+    }
+  }
 
-      final result = await PdfCropperService.processPdfs(
-        pdfFilesBytes: pdfBytesList,
-      );
+  Future<bool> _executeBatchProcessing(List<Uint8List> pdfBytesList) async {
+    _statusMessage = "Detecting keywords, cropping & sorting labels...";
+    _processingProgress = 0.5;
+    notifyListeners();
 
-      _activeCroppedPdfBytes = result.sortedCroppedPdfBytes;
-      _activeCroppedPdfPath = result.savedPdfPath;
-      _activeOrderItems = result.parsedItems;
+    final result = await PdfCropperService.processPdfs(
+      pdfFilesBytes: pdfBytesList,
+    );
 
-      _statusMessage = "Generating pick list and manifests...";
-      _processingProgress = 0.8;
-      notifyListeners();
+    _activeCroppedPdfBytes = result.sortedCroppedPdfBytes;
+    _activeCroppedPdfPath = result.savedPdfPath;
+    _activeOrderItems = result.parsedItems;
 
-      // Pre-generate reports
+    _statusMessage = "Generating pick list and manifests...";
+    _processingProgress = 0.8;
+    notifyListeners();
+
+    // Pre-generate secondary reports with isolated error guards
+    try {
       final pickBytes = await ReportGeneratorService.generatePickListPdf(items: _activeOrderItems);
       _activePickListPdfPath = await ReportGeneratorService.saveReportToFile(pickBytes, "pick_list");
+    } catch (e) {
+      debugPrint("Warning: pick list generation failed: $e");
+    }
 
+    try {
       if (result.manifestPdfBytes != null) {
         _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(result.manifestPdfBytes!, "manifest");
       } else {
         final manifestBytes = await ReportGeneratorService.generateManifestPdf(items: _activeOrderItems);
         _activeManifestPdfPath = await ReportGeneratorService.saveReportToFile(manifestBytes, "manifest");
       }
+    } catch (e) {
+      debugPrint("Warning: manifest generation failed: $e");
+    }
 
+    try {
       if (result.summaryPdfBytes != null) {
         _activeSummaryPdfPath = await ReportGeneratorService.saveReportToFile(
           result.summaryPdfBytes!,
           "order_summary",
         );
       }
+    } catch (e) {
+      debugPrint("Warning: order summary save failed: $e");
+    }
 
+    try {
       if (result.withoutXpressBeesBytes != null) {
         _activeWithoutXpressPdfPath = await ReportGeneratorService.saveReportToFile(
           result.withoutXpressBeesBytes!,
@@ -105,7 +174,11 @@ class LabelBatchProvider with ChangeNotifier {
       } else {
         _activeWithoutXpressPdfPath = null;
       }
+    } catch (e) {
+      debugPrint("Warning: withoutXpress save failed: $e");
+    }
 
+    try {
       if (result.xpressBeesBytes != null) {
         _activeXpressPdfPath = await ReportGeneratorService.saveReportToFile(
           result.xpressBeesBytes!,
@@ -114,25 +187,24 @@ class LabelBatchProvider with ChangeNotifier {
       } else {
         _activeXpressPdfPath = null;
       }
+    } catch (e) {
+      debugPrint("Warning: xpress save failed: $e");
+    }
 
-      _activePerSkuPdfPaths = {};
-      for (final entry in result.perSkuPdfs.entries) {
+    _activePerSkuPdfPaths = {};
+    for (final entry in result.perSkuPdfs.entries) {
+      try {
         final clean = entry.key.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
         final path = await ReportGeneratorService.saveReportToFile(entry.value, "sku_$clean");
         _activePerSkuPdfPaths[entry.key] = path;
+      } catch (e) {
+        debugPrint("Warning: per-sku save failed for ${entry.key}: $e");
       }
-
-      _processingProgress = 1.0;
-      _statusMessage = "Completed! ${_activeOrderItems.length} labels processed.";
-      return true;
-    } catch (e) {
-      debugPrint("Error processing PDFs: $e");
-      _statusMessage = "Failed: $e";
-      return false;
-    } finally {
-      _isProcessing = false;
-      notifyListeners();
     }
+
+    _processingProgress = 1.0;
+    _statusMessage = "Completed! ${_activeOrderItems.length} labels processed.";
+    return true;
   }
 
   /// Allow user to modify detected SKU / Size / Color in preview before saving
@@ -259,6 +331,7 @@ class LabelBatchProvider with ChangeNotifier {
     _activeManifestPdfPath = null;
     _activePerSkuPdfPaths = {};
     _statusMessage = 'Ready';
+    _lastError = null;
     notifyListeners();
   }
 }

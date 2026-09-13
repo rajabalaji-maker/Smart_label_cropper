@@ -19,19 +19,27 @@ class LabelCropperScreen extends StatefulWidget {
 
 class _LabelCropperScreenState extends State<LabelCropperScreen> {
   bool _deductStock = true;
-  List<File> _selectedFiles = [];
+  List<PlatformFile> _selectedFiles = [];
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-      allowMultiple: true,
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: true,
+        withData: true,
+      );
 
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _selectedFiles = result.paths.where((p) => p != null).map((p) => File(p!)).toList();
-      });
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _selectedFiles = result.files;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error selecting files: $e"), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -138,7 +146,32 @@ class _LabelCropperScreenState extends State<LabelCropperScreen> {
                                 foregroundColor: Colors.white,
                               ),
                               onPressed: () async {
-                                await batch.processPdfs(_selectedFiles);
+                                final success = await batch.processPlatformFiles(_selectedFiles);
+                                if (!mounted) return;
+                                if (!success) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Row(
+                                        children: [
+                                          Icon(Icons.error_outline, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text("Processing Failed"),
+                                        ],
+                                      ),
+                                      content: SelectableText(
+                                        batch.lastError ?? batch.statusMessage,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(ctx).pop(),
+                                          child: const Text("OK"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
                               },
                               icon: const Icon(Icons.play_arrow),
                               label: const Text("Process Labels"),
@@ -153,6 +186,38 @@ class _LabelCropperScreenState extends State<LabelCropperScreen> {
                         Text(
                           batch.statusMessage,
                           style: TextStyle(color: Colors.indigo.shade700, fontWeight: FontWeight.w600),
+                        ),
+                      ] else if (batch.lastError != null && batch.lastError!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error, color: Colors.red),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Processing Error",
+                                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    SelectableText(
+                                      batch.lastError!,
+                                      style: TextStyle(color: Colors.red.shade900, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ],

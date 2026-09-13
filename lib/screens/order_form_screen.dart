@@ -216,7 +216,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('$brand — Production Cutting & Stitching Plan',
+                  pw.Text('$brand - Production Cutting & Stitching Plan',
                       style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                   pw.Text('Generated: $dateStr', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
                 ],

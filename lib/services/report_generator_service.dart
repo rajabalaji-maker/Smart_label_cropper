@@ -281,7 +281,7 @@ class ReportGeneratorService {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Text(
-                    "$brandName — Aggregated Order Summary",
+                    "$brandName - Aggregated Order Summary",
                     style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
                   ),
                   pw.Text(

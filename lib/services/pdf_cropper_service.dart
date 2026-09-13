@@ -121,6 +121,10 @@ class PdfCropperService {
       }
     }
 
+    if (processedPages.isEmpty) {
+      throw Exception("No pages found in the selected PDF file(s).");
+    }
+
     // Sorting matching desktop app.py:
     // Group 0: Single-order Qty == 1 (SKU rank -> Size rank -> Partner rank)
     // Group 1: Single-order Qty > 1 (bulk)
@@ -259,10 +263,21 @@ class PdfCropperService {
       perSkuPdfs[entry.key] = Uint8List.fromList(bytes);
     }
 
-    // Generate Order Summary & Manifest
+    // Generate Order Summary & Manifest (safely wrapped so reports never abort label cropping)
     final allItems = processedPages.map((p) => p['orderItem'] as OrderItem).toList();
-    final summaryBytes = await ReportGeneratorService.generateOrderSummaryPdf(items: allItems);
-    final manifestBytes = await ReportGeneratorService.generateManifestPdf(items: allItems);
+    Uint8List? summaryBytes;
+    try {
+      summaryBytes = await ReportGeneratorService.generateOrderSummaryPdf(items: allItems);
+    } catch (e) {
+      debugPrint("Warning: generateOrderSummaryPdf failed: $e");
+    }
+
+    Uint8List? manifestBytes;
+    try {
+      manifestBytes = await ReportGeneratorService.generateManifestPdf(items: allItems);
+    } catch (e) {
+      debugPrint("Warning: generateManifestPdf failed: $e");
+    }
 
     // Persist full sorted PDF to device storage
     final outputDir = await getApplicationDocumentsDirectory();
