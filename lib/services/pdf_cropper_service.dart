@@ -268,17 +268,12 @@ class PdfCropperService {
     Uint8List? summaryBytes;
     try {
       summaryBytes = await ReportGeneratorService.generateOrderSummaryPdf(items: allItems);
-    } catch (e) {
-      debugPrint("Warning: generateOrderSummaryPdf failed: $e");
-    }
+    } catch (_) {}
 
     Uint8List? manifestBytes;
     try {
       manifestBytes = await ReportGeneratorService.generateManifestPdf(items: allItems);
-    } catch (e) {
-      debugPrint("Warning: generateManifestPdf failed: $e");
-    }
-
+    } catch (_) {}
     // Persist full sorted PDF to device storage
     final outputDir = await getApplicationDocumentsDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
