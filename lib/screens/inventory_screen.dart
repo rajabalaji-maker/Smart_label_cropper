@@ -143,7 +143,7 @@ class InventoryScreen extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                           color: item.isLowStock
                                               ? Colors.red.shade900
-                                              : Colors.black89,
+                                              : Colors.black87,
                                         ),
                                       ),
                                     ),
